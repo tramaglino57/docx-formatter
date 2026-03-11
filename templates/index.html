@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLS Studio Legale - Document Formatter</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'DM Sans',-apple-system,sans-serif; }
+        body { background:#f3f4f6; min-height:100vh; }
+        .header { background:#fff; padding:14px 28px; display:flex; align-items:center; justify-content:space-between;
+                   border-bottom:1px solid #e5e7eb; box-shadow:0 1px 4px rgba(0,0,0,0.05); }
+        .header-left { display:flex; align-items:center; gap:14px; }
+        .header-logo { width:44px; height:44px; border-radius:12px; }
+        .header-title { font-size:17px; font-weight:700; color:#111; }
+        .header-sub { font-size:12px; color:#9ca3af; font-weight:500; }
+        .main { max-width:800px; margin:40px auto; padding:0 20px; }
+        .card { background:#fff; border-radius:20px; box-shadow:0 2px 12px rgba(0,0,0,0.06); padding:36px; margin-bottom:24px; }
+        .card h2 { font-size:22px; font-weight:700; color:#111; margin-bottom:8px; }
+        .card p.sub { color:#6b7280; font-size:14px; margin-bottom:24px; }
+        .upload-area { border:3px dashed #d1d5db; border-radius:16px; padding:48px 24px; text-align:center;
+                        cursor:pointer; transition:all 0.2s; background:#fafafa; }
+        .upload-area:hover { border-color:#a855f7; background:#faf5ff; }
+        .upload-area.dragging { border-color:#9333ea; background:#f3e8ff; }
+        .upload-icon { font-size:48px; margin-bottom:12px; }
+        .upload-text { font-size:15px; color:#374151; font-weight:600; }
+        .upload-hint { font-size:13px; color:#9ca3af; margin-top:6px; }
+        .file-input { display:none; }
+        .file-selected { display:flex; align-items:center; gap:12px; background:#f0fdf4; border:2px solid #86efac;
+                          border-radius:12px; padding:14px 18px; margin-top:16px; }
+        .file-selected span { font-size:14px; font-weight:600; color:#166534; }
+        .btn { padding:14px 28px; border-radius:12px; font-weight:600; font-size:15px; cursor:pointer;
+                border:none; transition:all 0.2s; display:inline-flex; align-items:center; gap:8px; text-decoration:none; }
+        .btn-purple { background:linear-gradient(135deg,#c084fc,#a855f7,#9333ea); color:#fff;
+                       box-shadow:0 4px 14px rgba(147,51,234,0.3); }
+        .btn-purple:hover { opacity:0.92; transform:scale(1.02); }
+        .btn-purple:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+        .btn-white { background:#fff; border:2px solid #e5e7eb; color:#374151; }
+        .btn-white:hover { border-color:#a855f7; }
+        .btn-green { background:linear-gradient(135deg,#34d399,#10b981); color:#fff;
+                      box-shadow:0 4px 14px rgba(16,185,129,0.3); }
+        .btn-green:hover { opacity:0.92; transform:scale(1.02); }
+        .btn-row { display:flex; gap:12px; margin-top:24px; }
+        .report { background:#1e1b2e; color:#e2e8f0; border-radius:14px; padding:20px 24px;
+                   font-family:'Courier New',monospace; font-size:12px; line-height:1.7;
+                   white-space:pre-wrap; margin-top:20px; max-height:400px; overflow-y:auto; }
+        .flash { padding:14px 20px; border-radius:12px; margin-bottom:20px; font-weight:600; font-size:14px; }
+        .flash-error { background:#fef2f2; border-left:4px solid #dc2626; color:#991b1b; }
+        .badge { display:inline-block; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; }
+        .badge-ai { background:#f3e8ff; color:#7c3aed; }
+        .badge-rules { background:#dbeafe; color:#1d4ed8; }
+        .success-icon { font-size:64px; margin-bottom:16px; }
+        .footer { text-align:center; padding:24px; font-size:11px; color:#9ca3af; letter-spacing:1px; text-transform:uppercase; }
+        @keyframes fadeIn { from {opacity:0;transform:translateY(10px);} to {opacity:1;transform:translateY(0);} }
+        .animate { animation: fadeIn 0.4s ease-out; }
+        .spinner { display:none; width:20px; height:20px; border:3px solid rgba(255,255,255,0.3); border-top:3px solid #fff; border-radius:50%; animation:spin 0.8s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="data:image/png;base64,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" alt="SLS" class="header-logo"/>
+            <div>
+                <div class="header-title">SLS Studio Legale</div>
+                <div class="header-sub">Document Formatter {% if ai_available %}<span class="badge badge-ai">AI</span>{% endif %}</div>
+            </div>
+        </div>
+        <a href="/" class="btn btn-white" style="padding:8px 16px;font-size:13px;">🔄 Ricomincia</a>
+    </div>
+
+    <div class="main animate">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% if step == 1 %}
+        <div class="card">
+            <h2>📝 Formatta il tuo Atto</h2>
+            <p class="sub">Carica un file .docx e l'app lo formatterà automaticamente secondo il modello dello studio.
+            {% if ai_available %}<br><span class="badge badge-ai">🤖 AI attiva</span> Claude analizza la struttura del documento.{% else %}<br><span class="badge badge-rules">📐 Modalità regole</span> Formattazione basata su regole. Attiva l'AI per risultati migliori.{% endif %}</p>
+
+            <form action="/format" method="post" enctype="multipart/form-data" id="docForm">
+                <div class="upload-area" id="dropArea" onclick="document.getElementById('docFile').click()">
+                    <div class="upload-icon">📄</div>
+                    <div class="upload-text">Clicca o trascina qui il documento da formattare</div>
+                    <div class="upload-hint">Solo file .docx — max 16 MB</div>
+                    <input type="file" name="document" id="docFile" accept=".docx" class="file-input"
+                           onchange="showFileName(this)"/>
+                </div>
+                <div id="fileInfo" style="display:none;" class="file-selected">
+                    <span>📎</span>
+                    <span id="fileName"></span>
+                </div>
+                <div class="btn-row">
+                    <button type="submit" id="submitBtn" class="btn btn-purple" disabled onclick="showLoading()">
+                        <span id="btnText">⚡ Formatta Documento</span>
+                        <div class="spinner" id="spinner"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card" style="border-top:4px solid #a855f7;">
+            <h2>📋 Cosa fa il formatter</h2>
+            <p class="sub" style="margin-bottom:0;">Il documento viene analizzato e ogni paragrafo viene classificato (intestazione, autorità, parti, corpo, conclusioni, firma...) e formattato secondo il modello dello studio: font 12pt, interlinea 1.5, margini corretti, allineamenti appropriati per ogni sezione dell'atto.</p>
+        </div>
+
+        {% elif step == 2 %}
+        <div class="card" style="text-align:center;">
+            <div class="success-icon">🎉</div>
+            <h2>Documento Formattato!</h2>
+            <p class="sub">"{{ output_name }}" — {{ total }} paragrafi analizzati
+            {% if used_ai %}<span class="badge badge-ai">🤖 AI</span>{% else %}<span class="badge badge-rules">📐 Regole</span>{% endif %}</p>
+
+            {% if report %}
+            <div class="report" style="text-align:left;">{{ report }}</div>
+            {% endif %}
+
+            <div class="btn-row" style="justify-content:center; margin-top:28px;">
+                <a href="/download" class="btn btn-green" style="font-size:16px; padding:16px 36px;">
+                    📥 Scarica Documento Formattato
+                </a>
+            </div>
+            <div class="btn-row" style="justify-content:center;">
+                <a href="/" class="btn btn-white">🔄 Formatta un altro documento</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="footer">VERSION 2.0.0 • SLS TECH — Document Formatter</div>
+
+    <script>
+    function showFileName(input) {
+        if (input.files && input.files[0]) {
+            document.getElementById('fileInfo').style.display = 'flex';
+            document.getElementById('fileName').textContent = input.files[0].name;
+            document.getElementById('submitBtn').disabled = false;
+        }
+    }
+    function showLoading() {
+        document.getElementById('btnText').textContent = 'Formattazione in corso...';
+        document.getElementById('spinner').style.display = 'block';
+        document.getElementById('submitBtn').disabled = true;
+    }
+    document.querySelectorAll('.upload-area').forEach(area => {
+        ['dragenter','dragover'].forEach(e => area.addEventListener(e, ev => { ev.preventDefault(); area.classList.add('dragging'); }));
+        ['dragleave','drop'].forEach(e => area.addEventListener(e, ev => { ev.preventDefault(); area.classList.remove('dragging'); }));
+        area.addEventListener('drop', ev => {
+            const input = area.querySelector('input[type=file]');
+            if (ev.dataTransfer.files.length > 0) { input.files = ev.dataTransfer.files; input.dispatchEvent(new Event('change')); }
+        });
+    });
+    </script>
+</body>
+</html>
