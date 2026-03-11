@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+html = """<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -55,4 +55,9 @@ body{background:#f3f4f6;min-height:100vh}
 </div>
 <div class="ft">VERSION 2.0.0 - SLS TECH</div>
 </body>
-</html>
+</html>"""
+
+with open("templates/index.html", "w", encoding="utf-8") as f:
+    f.write(html)
+print("OK SALVATO")
+
